@@ -14,26 +14,22 @@
       }, opts);
       table = this;
       $.each(settings.columns, function(index, curCol) {
-        var body, buildSelect, col, firstRun, head, rebuild, select;
+        var body, buildSelect, col, firstRun, head, rebuild, select, unfiltered;
         body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex);
         head = table.find("thead").eq(settings.headIndex);
         select = $("<select/>");
         col = ":nth-child(" + curCol + ")";
         firstRun = true;
-        /*
-              unfiltered = (cCol) ->
-                truthArray = []
-                $.each settings.curFilters, (index, item) ->
-                  truthArray.push item.column is cCol
-                $.inArray true, truthArray
-        */
-
+        unfiltered = function(cCol) {
+          return $.each(settings.curFilters, function(index, item) {
+            return item.column !== cCol;
+          });
+        };
         buildSelect = function(selector) {
           var box, firstOpt, intCol, itemsArray;
           intCol = selector.replace(/\D/g, "");
           itemsArray = [];
           box = head.find("tr>*" + selector).find("select");
-          console.log("building for " + intCol);
           if (box.length === 0) {
             box = select.clone(true);
           } else {
@@ -84,20 +80,18 @@
         };
         rebuild = function(c) {
           return $.each($.grep(settings.columns, function(el, index) {
-            return el !== c;
+            return unfiltered("" + el);
           }), function(index, item) {
             return buildSelect(":nth-child(" + item + ")");
           });
         };
         select.change(function(evt) {
           var cColumn, chk, clearLink, sBox, selector;
-          console.log($(this));
-          console.log(this);
           sBox = $(this);
           chk = sBox.val();
           cColumn = sBox.attr("class").replace(/\D/g, "");
           selector = ":nth-child(" + cColumn + ")";
-          $(this).hide();
+          sBox.hide();
           if (chk !== settings.resetValue) {
             settings.curFilters.push({
               column: cColumn,
@@ -107,18 +101,35 @@
               return $(this).find("td" + selector).text() !== chk;
             }).hide();
             clearLink = $("<a>", {
-              href: "#",
-              text: "X"
+              text: "(" + chk + ")"
+            });
+            clearLink.css({
+              display: "block"
             });
             clearLink.click(function() {
-              $(this).detatch();
-              settings.curFilters = $.grep(settings.curFilters, function(el, index) {
-                return el.column !== cColumn;
-              });
-              return head.find("tr>*" + selector).each(function() {
-                return $(this).append(sBox);
-              });
+              var popFilter;
+              $(this).remove();
+              popFilter = settings.curFilters.splice(settings.curFilters.indexOf({
+                column: cColumn,
+                value: chk
+              }), 1);
+              if (settings.curFilters.length !== 0) {
+                body.find("tr").filter(":hidden").filter(function(i) {
+                  var row, win;
+                  row = $(this);
+                  return win = $.each(settings.curFilters, function(index, item) {
+                    console.log(row.find("td:nth-child(" + item.column + ")"));
+                    console.log("checking to see if " + ($.trim(row.find("td:nth-child(" + item.column + ")").text())) + " is " + ($.trim(item.value)));
+                    win = $.trim($(this).find("td:nth-child(" + item.column + ")").text()) === $.trim(item.value);
+                    return console.log(win);
+                  });
+                }).show();
+              } else {
+                body.find("tr").filter(":hidden").show();
+              }
+              return sBox.show();
             });
+            clearLink.appendTo(sBox.parent());
             return rebuild(cColumn);
           }
         });

@@ -16,18 +16,15 @@
       col = ":nth-child(#{curCol})"
       firstRun = true
       
-      ###
+      
       unfiltered = (cCol) ->
-        truthArray = []
         $.each settings.curFilters, (index, item) ->
-          truthArray.push item.column is cCol
-        $.inArray true, truthArray
-      ###
+           item.column isnt cCol
+ 
       buildSelect = (selector) ->
         intCol = selector.replace /\D/g, ""
         itemsArray = []
         box = head.find("tr>*#{selector}").find("select")
-        console.log "building for #{intCol}"
         if box.length is 0
           box = select.clone true
         else
@@ -63,18 +60,16 @@
 
       rebuild = (c) ->
         $.each $.grep(settings.columns, (el, index) ->
-          el isnt c
+          unfiltered "#{el}"
         ), (index, item) ->
           buildSelect ":nth-child(#{item})"
 
       select.change (evt) ->
-        console.log $ this
-        console.log this
         sBox = $ this
         chk = sBox.val()
         cColumn = sBox.attr("class").replace(/\D/g, "")
         selector = ":nth-child(#{cColumn})"
-        $(this).hide()
+        sBox.hide()
         if chk isnt settings.resetValue
           settings.curFilters.push
             column: cColumn
@@ -82,13 +77,23 @@
           body.find("tr").filter(":visible").filter((i) ->
             $(this).find("td#{selector}").text() isnt chk
           ).hide()
-          clearLink = $ "<a>", { href: "#", text: "X" }
+          clearLink = $ "<a>", { text: "(#{chk})" }
+          clearLink.css {display: "block"}
           clearLink.click ->
-            $(this).detatch()
-            settings.curFilters = $.grep settings.curFilters, (el, index) ->
-              el.column isnt cColumn
-            head.find("tr>*#{selector}").each ->
-              $(this).append sBox
+            $(this).remove()
+            popFilter = settings.curFilters.splice(settings.curFilters.indexOf({column: cColumn, value: chk}), 1)
+            if settings.curFilters.length isnt 0
+              body.find("tr").filter(":hidden").filter((i) ->
+                row = $ this
+                win = $.each settings.curFilters, (index, item) ->
+                  console.log row.find("td:nth-child(#{item.column})")
+                  console.log "checking to see if #{$.trim(row.find("td:nth-child(#{item.column})").text())} is #{$.trim(item.value)}"
+                  win = $.trim($(this).find("td:nth-child(#{item.column})").text()) is $.trim(item.value)
+                  console.log win
+              ).show()
+            else body.find("tr").filter(":hidden").show()
+            sBox.show()
+          clearLink.appendTo sBox.parent()
           rebuild cColumn
 
       buildSelect col
