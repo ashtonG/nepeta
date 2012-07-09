@@ -12,14 +12,16 @@
     $.each settings.columns, (index, curCol) ->
       body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex)
       head = table.find("thead").eq(settings.headIndex)
-      select = $("<select/>")
+      select = $ "<select/>", {class: "filter"}
       col = ":nth-child(#{curCol})"
       firstRun = true
       
       
       unfiltered = (cCol) ->
+        flag = true
         $.each settings.curFilters, (index, item) ->
-           item.column isnt cCol
+           flag = item.column isnt cCol
+        flag
  
       buildSelect = (selector) ->
         intCol = selector.replace /\D/g, ""
@@ -37,12 +39,6 @@
           itemsArray.push $(this).text()
         firstRun = false
         firstOpt = $ "<option />", value: settings.resetValue, text: "Choose Filter"
-        ###
-        if unfiltered intCol
-          firstOpt.text "Choose Filter"
-        else
-          firstOpt.text "Remove Filter"
-        ###
         box.append firstOpt
         itemsArray = $.grep itemsArray, (el, index) ->
           index is $.inArray el, itemsArray
@@ -53,17 +49,14 @@
           else
             curOpt.text "None"
           box.append curOpt
-        box.prop "selectedIndex", 1
         head.find("tr>*#{selector}").each ->
           selectBox = box.clone true
           $(this).append selectBox
 
-      rebuild = (c) ->
-        $.each $.grep(settings.columns, (el, index) ->
-          unfiltered "#{el}"
-        ), (index, item) ->
-          buildSelect ":nth-child(#{item})"
-
+      rebuild = (x) ->
+        $.each $("select.filter").filter(":visible"), (index, item) ->
+          console.log this
+          buildSelect ":nth-child(#{$(item).attr("class").replace(/\D/g,"")})"
       select.change (evt) ->
         sBox = $ this
         chk = sBox.val()
@@ -77,24 +70,25 @@
           body.find("tr").filter(":visible").filter((i) ->
             $(this).find("td#{selector}").text() isnt chk
           ).hide()
-          clearLink = $ "<a>", { text: "(#{chk})" }
+          clearLink = $ "<a>", { text: "(#{if $.trim(chk) isnt "" then $.trim chk else "None"})" }
           clearLink.css {display: "block"}
           clearLink.click ->
             $(this).remove()
-            popFilter = settings.curFilters.splice(settings.curFilters.indexOf({column: cColumn, value: chk}), 1)
+            sBox.prop "selectedIndex", 0
+            popFilter = settings.curFilters.splice settings.curFilters.indexOf({column: cColumn, value: chk}), 1
             if settings.curFilters.length isnt 0
               body.find("tr").filter(":hidden").filter((i) ->
+                match = false
                 row = $ this
-                win = $.each settings.curFilters, (index, item) ->
-                  console.log row.find("td:nth-child(#{item.column})")
-                  console.log "checking to see if #{$.trim(row.find("td:nth-child(#{item.column})").text())} is #{$.trim(item.value)}"
-                  win = $.trim($(this).find("td:nth-child(#{item.column})").text()) is $.trim(item.value)
-                  console.log win
+                $.each settings.curFilters, (index, item) ->
+                  match = $.trim(row.find("td:nth-child(#{item.column})").text()) is $.trim(item.value)
+                match
               ).show()
             else body.find("tr").filter(":hidden").show()
+            rebuild 0
             sBox.show()
           clearLink.appendTo sBox.parent()
-          rebuild cColumn
+          rebuild 0
 
       buildSelect col
     this
