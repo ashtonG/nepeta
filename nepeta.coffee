@@ -16,7 +16,6 @@
       select = $ "<select/>", class: "filter"
       col = ":nth-child(#{curCol})"
       firstRun = true
-      headerText = head.find("tr>*#{selector}").text()
       
       stripToNumber = (str) -> str.replace /\D/g, ""
       
@@ -28,7 +27,8 @@
       buildSelect = (selector) ->
         intCol = stripToNumber selector
         itemsArray = []
-        head.find("tr>*#{selector}").find("select").detach()
+        sel = head.find("tr>*#{selector}").find("select").detach()
+        fOpt = sel.children().eq(0)
         box = select.clone true
         box.addClass "FilterColumn_#{intCol}"
         body.find("tr>td" + selector).filter(":visible").each ->
@@ -37,6 +37,7 @@
           itemsArray.push $(this).text()
         firstRun = false
         firstOpt = $ "<option />", value: settings.resetValue, text: if settings.headerSelect then head.find("tr>*#{selector}").text() else "Choose Filter"
+        firstOpt = if fOpt.length != 0 then fOpt else firstOpt
         box.append firstOpt
         itemsArray = $.grep itemsArray, (el, index) -> index is $.inArray el, itemsArray
         $.each itemsArray, (index, item) ->

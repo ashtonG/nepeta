@@ -15,7 +15,7 @@
       }, opts);
       table = this;
       $.each(settings.columns, function(index, curCol) {
-        var body, buildSelect, col, firstRun, head, headerText, rebuild, select, stripToNumber, unfiltered;
+        var body, buildSelect, col, firstRun, head, rebuild, select, stripToNumber, unfiltered;
         body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex);
         head = table.find("thead").eq(settings.headIndex);
         select = $("<select/>", {
@@ -23,7 +23,6 @@
         });
         col = ":nth-child(" + curCol + ")";
         firstRun = true;
-        headerText = head.find("tr>*" + selector).text();
         stripToNumber = function(str) {
           return str.replace(/\D/g, "");
         };
@@ -36,10 +35,11 @@
           return flag;
         };
         buildSelect = function(selector) {
-          var box, firstOpt, intCol, itemsArray;
+          var box, fOpt, firstOpt, intCol, itemsArray, sel;
           intCol = stripToNumber(selector);
           itemsArray = [];
-          head.find("tr>*" + selector).find("select").detach();
+          sel = head.find("tr>*" + selector).find("select").detach();
+          fOpt = sel.children().eq(0);
           box = select.clone(true);
           box.addClass("FilterColumn_" + intCol);
           body.find("tr>td" + selector).filter(":visible").each(function() {
@@ -53,6 +53,7 @@
             value: settings.resetValue,
             text: settings.headerSelect ? head.find("tr>*" + selector).text() : "Choose Filter"
           });
+          firstOpt = fOpt.length !== 0 ? fOpt : firstOpt;
           box.append(firstOpt);
           itemsArray = $.grep(itemsArray, function(el, index) {
             return index === $.inArray(el, itemsArray);
