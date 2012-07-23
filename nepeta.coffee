@@ -8,11 +8,17 @@
       resetValue: "##FILTERMENU.RESET##"
       curFilters: []
       headerSelect: false
+      jqueryui: false
     , opts)
     table = this
+    body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex)
+    head = table.find("thead").eq(settings.headIndex)
+
+    if settings.jqueryui
+      table.toggleClass "ui-widget"
+      head.toggleClass "ui-widget-header"
+      body.toggleClass "ui-widget-content"
     $.each settings.columns, (index, curCol) ->
-      body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex)
-      head = table.find("thead").eq(settings.headIndex)
       select = $ "<select/>", class: "filter"
       col = ":nth-child(#{curCol})"
       firstRun = true
