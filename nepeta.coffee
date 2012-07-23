@@ -7,6 +7,7 @@
       headIndex: 0
       resetValue: "##FILTERMENU.RESET##"
       curFilters: []
+      headerSelect: false
     , opts)
     table = this
     $.each settings.columns, (index, curCol) ->
@@ -15,6 +16,7 @@
       select = $ "<select/>", class: "filter"
       col = ":nth-child(#{curCol})"
       firstRun = true
+      headerText = head.find("tr>*#{selector}").text()
       
       stripToNumber = (str) -> str.replace /\D/g, ""
       
@@ -34,7 +36,7 @@
             $(this).addClass "FilterColumn_#{curCol}"
           itemsArray.push $(this).text()
         firstRun = false
-        firstOpt = $ "<option />", value: settings.resetValue, text: "Choose Filter"
+        firstOpt = $ "<option />", value: settings.resetValue, text: if settings.headerSelect then head.find("tr>*#{selector}").text() else "Choose Filter"
         box.append firstOpt
         itemsArray = $.grep itemsArray, (el, index) -> index is $.inArray el, itemsArray
         $.each itemsArray, (index, item) ->
@@ -46,6 +48,7 @@
           box.append curOpt
         head.find("tr>*#{selector}").each ->
           selectBox = box.clone true
+          if settings.headerSelect then $(this).empty()
           $(this).append selectBox
 
       rebuild = (x) ->

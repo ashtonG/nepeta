@@ -10,32 +10,37 @@
         bodyIndex: 0,
         headIndex: 0,
         resetValue: "##FILTERMENU.RESET##",
-        curFilters: []
+        curFilters: [],
+        headerSelect: false
       }, opts);
       table = this;
       $.each(settings.columns, function(index, curCol) {
-        var body, buildSelect, col, firstRun, head, rebuild, select, unfiltered;
+        var body, buildSelect, col, firstRun, head, headerText, rebuild, select, stripToNumber, unfiltered;
         body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex);
         head = table.find("thead").eq(settings.headIndex);
-        select = $("<select/>");
+        select = $("<select/>", {
+          "class": "filter"
+        });
         col = ":nth-child(" + curCol + ")";
         firstRun = true;
+        headerText = head.find("tr>*" + selector).text();
+        stripToNumber = function(str) {
+          return str.replace(/\D/g, "");
+        };
         unfiltered = function(cCol) {
-          return $.each(settings.curFilters, function(index, item) {
-            return item.column !== cCol;
+          var flag;
+          flag = true;
+          $.each(settings.curFilters, function(index, item) {
+            return flag = item.column !== cCol;
           });
+          return flag;
         };
         buildSelect = function(selector) {
           var box, firstOpt, intCol, itemsArray;
-          intCol = selector.replace(/\D/g, "");
+          intCol = stripToNumber(selector);
           itemsArray = [];
-          box = head.find("tr>*" + selector).find("select");
-          if (box.length === 0) {
-            box = select.clone(true);
-          } else {
-            box.detach();
-            box = select.clone(true);
-          }
+          head.find("tr>*" + selector).find("select").detach();
+          box = select.clone(true);
           box.addClass("FilterColumn_" + intCol);
           body.find("tr>td" + selector).filter(":visible").each(function() {
             if (firstRun) {
@@ -46,14 +51,7 @@
           firstRun = false;
           firstOpt = $("<option />", {
             value: settings.resetValue,
-            text: "Choose Filter"
-            /*
-                    if unfiltered intCol
-                      firstOpt.text "Choose Filter"
-                    else
-                      firstOpt.text "Remove Filter"
-            */
-
+            text: settings.headerSelect ? head.find("tr>*" + selector).text() : "Choose Filter"
           });
           box.append(firstOpt);
           itemsArray = $.grep(itemsArray, function(el, index) {
@@ -71,25 +69,25 @@
             }
             return box.append(curOpt);
           });
-          box.prop("selectedIndex", 1);
           return head.find("tr>*" + selector).each(function() {
             var selectBox;
             selectBox = box.clone(true);
+            if (settings.headerSelect) {
+              $(this).empty();
+            }
             return $(this).append(selectBox);
           });
         };
-        rebuild = function(c) {
-          return $.each($.grep(settings.columns, function(el, index) {
-            return unfiltered("" + el);
-          }), function(index, item) {
-            return buildSelect(":nth-child(" + item + ")");
+        rebuild = function(x) {
+          return $.each($("select.filter").filter(":visible"), function(index, item) {
+            return buildSelect(":nth-child(" + (stripToNumber($(item).attr("class"))) + ")");
           });
         };
         select.change(function(evt) {
           var cColumn, chk, clearLink, sBox, selector;
           sBox = $(this);
           chk = sBox.val();
-          cColumn = sBox.attr("class").replace(/\D/g, "");
+          cColumn = stripToNumber(sBox.attr("class"));
           selector = ":nth-child(" + cColumn + ")";
           sBox.hide();
           if (chk !== settings.resetValue) {
@@ -101,41 +99,43 @@
               return $(this).find("td" + selector).text() !== chk;
             }).hide();
             clearLink = $("<a>", {
-              text: "(" + chk + ")"
+              text: "(" + ($.trim(chk) !== "" ? $.trim(chk) : "None") + ")",
+              "class": "{\"column\": \"" + cColumn + "\", \"value\":\"" + ($.trim(chk)) + "\"}"
             });
             clearLink.css({
               display: "block"
             });
             clearLink.click(function() {
-              var popFilter;
+              var filterObj;
+              filterObj = $.parseJSON($(this).attr("class"));
               $(this).remove();
-              popFilter = settings.curFilters.splice(settings.curFilters.indexOf({
-                column: cColumn,
-                value: chk
-              }), 1);
+              sBox.prop("selectedIndex", 0);
+              settings.curFilters = $.grep(settings.curFilters, function(el, index) {
+                return el.column !== filterObj.column;
+              });
               if (settings.curFilters.length !== 0) {
                 body.find("tr").filter(":hidden").filter(function(i) {
-                  var row, win;
+                  var match, row;
+                  match = false;
                   row = $(this);
-                  return win = $.each(settings.curFilters, function(index, item) {
-                    console.log(row.find("td:nth-child(" + item.column + ")"));
-                    console.log("checking to see if " + ($.trim(row.find("td:nth-child(" + item.column + ")").text())) + " is " + ($.trim(item.value)));
-                    win = $.trim($(this).find("td:nth-child(" + item.column + ")").text()) === $.trim(item.value);
-                    return console.log(win);
+                  $.each(settings.curFilters, function(index, item) {
+                    return match = $.trim(row.find("td:nth-child(" + item.column + ")").text()) === $.trim(item.value);
                   });
+                  return match;
                 }).show();
               } else {
                 body.find("tr").filter(":hidden").show();
               }
+              rebuild(0);
               return sBox.show();
             });
-            clearLink.appendTo(sBox.parent());
-            return rebuild(cColumn);
+            clearLink.clone(true).appendTo(sBox.parent());
+            return rebuild(0);
           }
         });
         return buildSelect(col);
       });
-      return this;
+      return table;
     };
   })(jQuery);
 
