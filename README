@@ -41,4 +41,4 @@ Options:
           enabled (default: false)
 		  	Enables the experimental plugin registration feature.
           sFunction (default: null)
-		  	The JQueryUI widget function to register the dropdown box with. Must be a string.
+		  	The JQueryUI widget function to register the dropdown box with. Must be a variable name.
