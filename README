@@ -1,0 +1,44 @@
+Nepeta: A Jquery plugin.
+
+What it does: Filters a table according to the contents of a column.
+
+Basic usage: Given an html table:
+		
+	<table id="data">
+		<thead id="head">
+			<tr>
+				<td></td>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<td></td>
+			</tr>
+		</tbody>
+	</table>
+
+	call this:
+		$("table#data").filtermenu()
+	This will create a dropdown box in the header row replacing the text in the first column. Selecting an option in the dropdown box filters out rows of the table that do not have the value selected, and changes the heading for that column to the selected value. One can restore the dropdown box by clicking on the header.
+
+Options:
+      columns (default: [ 1 ])
+	  	An array of columns, indexed from 1, to add the dropdown box to. Filtering multiple columns is iffy, because one must remove the filters on the columns in the same order that they added them.
+      bodyId (default: "")
+	  	An ID selector for the tbody element, for table elements that have more than one tbody.
+      bodyIndex (default: 0)
+	  	If one does not have an ID attribute for the tbody element, one can use this option, which selects the nth tbody element in the table, zero indexed.
+      headIndex (default: 0)
+	  	Selects the nth thead element in the table, zero indexed.
+      resetValue (default: "##FILTERMENU.RESET##")
+	  	The value of the option in the dropdown for the Header value.
+      headerSelect (default: false)
+	  	If true, does not replace the dropdown box when a value is selected.
+      ui: Experimental JQueryUI support
+        enabled (default: false)
+			Enables Experimental JQueryUI support.
+        select: If one is using a widget plugin that replaces dropdown menus, these options allow for Nepeta to try registering the dropdown boxes that it creates with the plugin
+          enabled (default: false)
+		  	Enables the experimental plugin registration feature.
+          sFunction (default: null)
+		  	The JQueryUI widget function to register the dropdown box with. Must be a string.
