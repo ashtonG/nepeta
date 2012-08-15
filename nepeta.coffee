@@ -1,6 +1,6 @@
 (($) ->
   $.fn.filtermenu = (opts) ->
-    settings = $.extend(
+    settings = $.extend(true,
       columns: [ 1 ]
       bodyId: ""
       bodyIndex: 0
@@ -8,13 +8,16 @@
       resetValue: "##FILTERMENU.RESET##"
       curFilters: []
       headerSelect: false
-      jqueryui: false
+      ui:
+        enabled: false
+        select:
+          enabled: false
+          sFunction: null
     , opts)
     table = this
     body = table.find("tbody" + settings.bodyId).eq(settings.bodyIndex)
     head = table.find("thead").eq(settings.headIndex)
-
-    if settings.jqueryui
+    if settings.ui.enabled
       table.toggleClass "ui-widget"
       head.toggleClass "ui-widget-header"
       body.toggleClass "ui-widget-content"
@@ -22,14 +25,11 @@
       select = $ "<select/>", class: "filter"
       col = ":nth-child(#{curCol})"
       firstRun = true
-      
       stripToNumber = (str) -> str.replace /\D/g, ""
-      
       unfiltered = (cCol) ->
         flag = true
         $.each settings.curFilters, (index, item) -> flag = item.column isnt cCol
         flag
- 
       buildSelect = (selector) ->
         intCol = stripToNumber selector
         itemsArray = []
@@ -57,16 +57,14 @@
           selectBox = box.clone true
           if settings.headerSelect then $(this).empty()
           $(this).append selectBox
-
       rebuild = (x) ->
         $.each $("select.filter").filter(":visible"), (index, item) -> buildSelect ":nth-child(#{stripToNumber $(item).attr("class")})"
-
       select.change (evt) ->
         sBox = $ this
         chk = sBox.val()
         cColumn = stripToNumber sBox.attr("class")
         selector = ":nth-child(#{cColumn})"
-        sBox.hide()
+        sBox.parent().children().hide()
         if chk isnt settings.resetValue
           settings.curFilters.push
             column: cColumn
@@ -88,10 +86,11 @@
               ).show()
             else body.find("tr").filter(":hidden").show()
             rebuild 0
-            sBox.show()
+            if settings.ui.select.enabled
+              $.fn.selectmenu.call(sBox)
+              sBox.parent().children().not(sBox).show()
           clearLink.clone(true).appendTo sBox.parent()
           rebuild 0
-
       buildSelect col
     table
 ) jQuery
